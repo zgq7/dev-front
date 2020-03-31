@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>皮皮聊天工具</title>
+    <link href="https://cdn.bootcss.com/font-awesome/5.12.1/css/all.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+</head>
+<!--- [主題展示] --->
+<body>
+<div class="main">
+    <div class="side">
+        <div class="online-header">在线人数</div>
+    </div>
+    <div class="commute">
+        <div id="view" class="view"></div>
+        <div>
+            <div class="operate">
+                <a href="javascript:;">
+                    <input type="file" id="file" accept="image/*" title="请选择图片">
+                    <i class="fas fa-image"></i>
+                </a>
+            </div>
+            <textarea id="msg" class="msg-area" placeholder="输入..."></textarea>
+        </div>
+    </div>
+</div>
+<div class="login-wrap">
+    <div class="login">
+        <h2>登录</h2>
+        <input type="text" name="username" id="username" placeholder="请输入登录名"/>
+        <input type="button" id="submit" value="登录"/>
+    </div>
+</div>
+</body>
+
+<style>
+    body {
+        background-color: cadetblue;
+        text-align: center;
+        margin-top: 100px;
+        background-size: 100%;
+        font-family: "Helvetica Neue", Helvetica, "Microsoft YaHei", Arial, sans-serif
+    }
+
+    .operate {
+        text-align: right;
+    }
+
+    .operate > a {
+        position: relative;
+        color: #e03b96;
+        font-size: 20px;
+    }
+
+    .operate > a > input {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-size: 0px;
+        width: 20px;
+        height: 20px;
+        outline: none;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .login-wrap {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, .5);
+        z-index: 999;
+    }
+
+    .login-wrap .login {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 350px;
+        /*height: 140px;*/
+        margin-left: -175px;
+        margin-top: -100px;
+        background-color: #fff;
+        border-radius: 3px;
+        box-shadow: 0 0 10px #353535;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    .login-wrap .login input {
+        width: 100%;
+        height: 40px;
+        box-sizing: border-box;
+        padding: 5px;
+        border: 1px solid #ddd;
+        margin: 10px 0;
+        outline: none;
+    }
+
+    .login-wrap .login input:nth-child(3) {
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        background-image: linear-gradient(to right, #5be0b5, #31a7b3);
+    }
+
+    .login-wrap .login input:nth-child(3):hover {
+        background-image: linear-gradient(to right, #53caa3, #39becc);
+    }
+
+
+    .main {
+        width: 40%;
+        margin-left: 30%;
+    }
+
+    /*屏幕小于800px*/
+    @media screen and (max-width: 800px) {
+        .main {
+            width: 100%;
+            margin-left: 0;
+        }
+    }
+
+    .side {
+        float: left;
+        width: 150px;
+        background-color: #4e4e4e;
+        padding: 8px 0;
+        border-top-left-radius: 3px;
+        border-bottom-left-radius: 3px;
+    }
+
+    .side .online-header {
+        color: #2eff9f;
+        line-height: 35px;
+    }
+
+    .side .online {
+        height: 40px;
+        line-height: 40px;
+        text-align: left;
+        text-indent: 15px;
+        border-top: 1px solid #7d7d7d;
+        border-bottom: 1px solid #383838;
+        color: #fff;
+    }
+
+    .side .online > span {
+        display: block;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    .commute {
+        float: right;
+        box-sizing: border-box;
+        padding: 8px;
+        background-color: #fff;
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+    }
+
+
+    .view {
+        clear: both;
+        overflow-x: hidden;
+        margin-bottom: 8px;
+        height: 400px;
+    }
+
+    .view-left {
+        text-align: left;
+        width: 45%;
+        margin-bottom: 15px;
+    }
+
+    .view-right-wrap {
+        overflow: hidden;
+    }
+
+    .view-right {
+        width: 45%;
+        margin: 0 0 15px 10%;
+        float: right;
+        text-align: right;
+    }
+
+    .view .view-name {
+        font-size: 14px;
+    }
+
+    .view .view-name > span:nth-child(1) {
+        color: #0a7bce;
+    }
+
+    .view .view-name > span:nth-child(2) {
+        color: #969696;
+    }
+
+    .view .view-right .view-name > span:nth-child(1) {
+        color: #969696;
+    }
+
+    .view .view-right .view-name > span:nth-child(2) {
+        color: #0a7bce;
+    }
+
+    .view .view-content {
+        padding: 5px;
+        color: #fff;
+        margin-top: 3px;
+    }
+
+    .view .view-content > span {
+        background-color: #1cb5ce;
+        border-radius: 3px;
+        padding: 6px;
+        display: inline-block;
+        text-align: left;
+    }
+
+    .view .view-left .view-content > span {
+        background-color: #a2ce1c;
+        border-radius: 3px;
+        padding: 6px;
+    }
+
+    .view .view-content > img {
+        width: 100px;
+    }
+
+    .msg-area {
+        width: 100%;
+        height: 80px;
+        padding: 5px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        outline-color: #2fa4b7;
+        font-size: 14px;
+        color: #717171;
+        background-color: antiquewhite;
+    }
+
+    ::-webkit-scrollbar {
+        width: 0;
+    }
+</style>
+
+<script>
+    //线上
+    let baseUrl = 'http://49.235.64.160';
+    let socket = io.connect(baseUrl + ':9191');
+    //本地
+    /*    let baseUrl = 'http://127.0.0.1';
+        let socket = io.connect(baseUrl + ':9066');*/
+    //http 请求
+    let httpUrl = baseUrl + ':9055';
+
+    var self = {};
+
+    function who(uuid, name) {
+        self.uuid = uuid;
+        self.name = name;
+        socket.emit('registryGroup', JSON.stringify(self));
+        console.log(self);
+    }
+
+    //连接
+    socket.on('connect', function () {
+        console.log("成功连接！" + socket.id);
+    });
+    //掉线
+    socket.on('disconnect', function () {
+        alert('你已掉线！请重新登录！');
+    });
+    //重连
+    socket.on('reconnect', function () {
+        console.log('重连成功！');
+    });
+    //注册结果
+    socket.on("registryResult", function (data) {
+        console.log(data);
+        alert(data === 'true' ? self.uuid + '注册成功！' : self.uuid + '注册失败！');
+        // 获取全部在线人
+        $.getJSON(httpUrl + "/all", function (data) {
+            $.each(data, function (i, item) {
+                onlinePeople(item.uuid, item.uuid);
+            });
+        });
+    });
+    //消息发送结果
+    var sendFlag = true;
+    socket.on('messageSendResult', function (data) {
+        sendFlag = data.flag;
+        console.log(sendFlag ? "消息ID->" + data.msgId + "  发送成功！" : "消息->" + data.msgId + "  发送失败！");
+        //找到对应的消息记录并标记是否发送成功
+    });
+    //新消息接收
+    socket.on('messageRecieve', function (data) {
+        console.log('来消息了...' + data);
+        const news = JSON.parse(data);
+        if (news.type == "text") {
+            showReceive(news.name, news.time, news.msg);
+        } else if (news.type == "img") {
+            showReceiveImg(news.name, news.time, news.msg)
+        }
+
+    });
+    //退出
+    socket.on('logout', function (data) {
+        alert(data);
+    });
+    //上线
+    socket.on('whoOnline', function (data) {
+        console.log('有人上线了 -> ' + data)
+        const news = JSON.parse(data);
+        onlinePeople(news.uuid, news.name);
+    });
+    //下线
+    socket.on('whoOutOnline', function (data) {
+        console.log('有人下线了 -> uuid = ' + data)
+        offlinePeople(data);
+    });
+
+    // 计算聊天窗口变化
+    function msgWindow() {
+        let sideWidth = $('.side').width();
+        let mainWidth = $('.main').width();
+        $('.commute').css('width', (mainWidth - sideWidth) + 'px');
+
+        let commuteHeight = $('.commute').height();
+        $('.side').css('height', commuteHeight + 'px');
+    }
+
+    function init() {
+        msgWindow();
+        // 登录面板
+        loginModal();
+    }
+
+    // 初始化
+    init();
+
+    // 浏览器大小发生变化
+    $(window).resize(function () {
+        msgWindow();
+    });
+
+    // 登录事件
+    $('#submit').click(function () {
+        var name = $.trim($('#username').val());
+        if (name === "") {
+            alert('登录名不能为空！')
+        }
+        who(name, name);
+        loginModal();
+    });
+
+    function loginModal() {
+        if (self.name == undefined || self.name == "") {
+            $('.login-wrap').fadeIn();
+        } else {
+            $('.login-wrap').fadeOut();
+        }
+    }
+
+    // 在线
+    function onlinePeople(UUID, name) {
+        let p = '<div class="online" data-uuid="' + UUID + '">' +
+            '<span>' + name + '</span>' +
+            '</div>';
+        $('.side').append($(p));
+    }
+
+    // 离线
+    function offlinePeople(name) {
+        // 移除旧的数据
+        $('.online[data-uuid="' + name + '"]').remove();
+    }
+
+    // 显示已发送
+    function showSend() {
+        let uuid = self.uuid;
+        let name = self.name;
+        let time = dateFormat('YYYY-mm-dd HH:MM', new Date());
+        let content = $.trim($('#msg').val());
+        if (content === "") {
+            return;
+        }
+        let model = {};
+        model.type = 'text';
+        model.msg = content;
+        model.msgId = generateUUID();
+        model.uuid = uuid;
+        model.time = new Date();
+        console.log(time);
+        model.name = name;
+        socket.emit('messageSendGroup', JSON.stringify(model));
+        //发送成功才显示聊天内容
+        if (sendFlag) {
+            let html = '<div class="view-right-wrap">' +
+                '<div class="view-right">' +
+                '<div class="view-name">' +
+                '<span>' + time + ' </span>' +
+                '<span>' + name + '</span>' +
+                '</div>' +
+                '<div class="view-content"><span>' + content + '</span></div>' +
+                '</div>' +
+                '</div>';
+            $('#view').append($(html));
+        }
+        //清空文本框内容
+        $("#msg").val("");
+        // 滚动到最下面
+        $('.view').scrollTop($('.view').prop("scrollHeight"));
+    }
+
+    // 显示已接收
+    function showReceive(name, time, content) {
+        let html = '<div class="view-left">' +
+            '<div class="view-name">' +
+            '<span>' + name + ' </span>' +
+            '<span>' + time + '</span>' +
+            '</div>' +
+            '<div class="view-content"><span>' + content + '</span></div>' +
+            '</div>';
+        $('#view').append($(html));
+        // 滚动到最下面
+        $('.view').scrollTop($('.view').prop("scrollHeight"));
+    }
+
+    // 文本框回车发消息
+    $('#msg').keyup(function (event) {
+        if (event.keyCode === 13) {
+            showSend();
+        }
+    });
+
+    // 上传图片
+    $('#file').change(function () {
+        var formData = new FormData();
+        formData.append("file", $("#file")[0].files[0]);
+        $.ajax({
+            url: 'http://49.235.64.160:9055/fileUp',
+            type: 'post',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                console.log();
+                if (data["code"] == 200) {
+                    showSendImg(data["path"]);
+                } else {
+                    console.log(res);
+                }
+            }
+        });
+        $("#file").val('');
+    });
+
+    function showSendImg(path) {
+        let uuid = self.uuid;
+        let name = self.name;
+        let time = dateFormat('YYYY-mm-dd HH:MM', new Date());
+        let model = {};
+        model.type = 'img';
+        model.msg = path;
+        model.msgId = generateUUID();
+        model.uuid = uuid;
+        model.time = new Date();
+        model.name = name;
+        socket.emit('messageSendGroup', JSON.stringify(model));
+        //发送成功才显示聊天内容
+        if (sendFlag) {
+            let html = '<div class="view-right-wrap">' +
+                '<div class="view-right">' +
+                '<div class="view-name">' +
+                '<span>' + time + ' </span>' +
+                '<span>' + name + '</span>' +
+                '</div>' +
+                '<div class="view-content"><img src="' + path + '"/></div>' +
+                '</div>' +
+                '</div>';
+            $('#view').append($(html));
+        }
+        // 滚动到最下面
+        $('.view').scrollTop($('.view').prop("scrollHeight"));
+    }
+
+    // 显示已接收图片
+    function showReceiveImg(name, time, img) {
+        let html = '<div class="view-left">' +
+            '<div class="view-name">' +
+            '<span>' + name + ' </span>' +
+            '<span>' + time + '</span>' +
+            '</div>' +
+            '<div class="view-content"><img src="' + img + '"/></div>' +
+            '</div>';
+        $('#view').append($(html));
+        // 滚动到最下面
+        $('.view').scrollTop($('.view').prop("scrollHeight"));
+    }
+
+
+    // -------------------------------------------------------------------
+
+
+    function dateFormat(fmt, date) {
+        let ret;
+        const opt = {
+            "Y+": date.getFullYear().toString(),        // 年
+            "m+": (date.getMonth() + 1).toString(),     // 月
+            "d+": date.getDate().toString(),            // 日
+            "H+": date.getHours().toString(),           // 时
+            "M+": date.getMinutes().toString(),         // 分
+            "S+": date.getSeconds().toString()          // 秒
+            // 有其他格式化字符需求可以继续添加，必须转化成字符串
+        };
+        for (let k in opt) {
+            ret = new RegExp("(" + k + ")").exec(fmt);
+            if (ret) {
+                fmt = fmt.replace(ret[1], (ret[1].length == 1) ? (opt[k]) : (opt[k].padStart(ret[1].length, "0")))
+            }
+        }
+        return fmt;
+    }
+
+    //获取msgId -> UUID
+    function generateUUID() {
+        var d = new Date().getTime();
+        if (window.performance && typeof window.performance.now === "function") {
+            d += performance.now(); //use high-precision timer if available
+        }
+        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (d + Math.random() * 16) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        return uuid;
+    }
+
+</script>
+</html>

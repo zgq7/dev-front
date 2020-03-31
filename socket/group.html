@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>皮皮聊天工具</title>
+    <script src="https://cdn.bootcss.com/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+    <!--<script src="socket-io.js"></script>-->
+    <!--<script src="jquery-3.3.1.js"></script>-->
+</head>
+<!--- [主題展示] --->
+<body>
+<label id="ppp" for="self">
+    你是谁：
+</label>
+<select id="self">
+    <option value="lua">小LUA</option>
+    <option value="lnz">大LUA</option>
+    <option value="xpp">小萍萍</option>
+</select>
+<button class="send" onclick="who($('#self').val(),$('#self option:selected').text())">
+    点击登录并加入群聊
+</button>
+<div id="commute">
+
+</div>
+<div id="ccc">
+    <label for="ss">
+        输入：
+    </label>
+    <input id="ss"/>
+    <button class="send" onclick="sendMsg($('#ss').val(),$('#select').val())">发送</button>
+</div>
+</body>
+<style>
+    body {
+        background-color: cadetblue;
+        text-align: center;
+        margin-top: 200px;
+        background-size: 100%;
+    }
+
+    #commute {
+        background-color: white;
+        width: 800px;
+        height: 400px;
+        margin: auto;
+    }
+
+    #ccc {
+        background-color: salmon;
+        width: 800px;
+        height: 100px;
+        margin: auto;
+    }
+
+    #ss {
+        margin-top: 2%;
+        height: 40px;
+        width: 400px;
+    }
+
+    .send {
+        height: 42px;
+        width: 200px;
+        background-color: salmon;
+    }
+
+</style>
+
+<script>
+    //var socket = io.connect('http://127.0.0.1:9066');
+    var socket = io.connect('http://49.235.64.160:9191');
+    var self = {};
+
+    function who(uuid, name) {
+        self.uuid = uuid;
+        socket.emit('registryGroup', JSON.stringify(self));
+    }
+
+    //连接
+    socket.on('connect', function () {
+        console.log("成功连接！"+socket.id);
+    });
+    //掉线
+    socket.on('disconnect', function () {
+        alert('你已掉线！F5刷新页面重新登录！');
+    });
+    //重连
+    socket.on('', function (data) {
+        console.log('重连成功！');
+    });
+    //注册结果
+    socket.on("registryResult", function (data) {
+        console.log(data);
+        alert(data ? self.uuid + '注册成功！' : self.uuid + '注册失败！');
+    });
+    //消息发送结果
+    socket.on('messageSendResult', function (data) {
+        console.log(data.flag ? "消息ID->" + data.msgId + "  发送成功！" : "消息->" + data.msgId + "  发送失败！");
+    });
+    //新消息接收
+    var msgs = [];
+    var i = 10, len = 10;
+    socket.on('messageRecieve', function (data) {
+        console.log('来消息了...' + data);
+        var news = JSON.parse(data);
+        msgs[i] = "<div style='background-color: bisque;height: 20px'>" + news.fromUuid + ":" + news.msg + "</div>";
+        console.log(msgs);
+        if (i < 0) {
+            console.log('cpx');
+            for (var j = len; j > 0; j--) {
+                msgs[j] = msgs[j - 1];
+            }
+            msgs[0] = msgs[i];
+            i = -1;
+        } else {
+            i--;
+        }
+
+        document.getElementById("commute").innerHTML = msgs;
+    });
+    //下线
+    socket.on('logout', function (data) {
+        alert(data);
+    });
+
+    //发送消息
+    function sendMsg(msg, uuid) {
+        var model = {};
+        model.msg = msg;
+        model.msgId = 1;
+        model.uuid = uuid;
+        socket.emit('messageSendGroup', JSON.stringify(model));
+        $("#ss").val("");
+    }
+</script>
+</html>

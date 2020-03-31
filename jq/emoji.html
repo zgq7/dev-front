@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="http://cokapp.github.io/jquery-emoji/libs/jquery.emoji.min.css">
+    <script src="http://cokapp.github.io/jquery-emoji/libs/jquery.emoji.min.js" type="text/javascript"></script>
+</head>
+<body>
+<a id="emoji" href="javascript:" title="颜文字">表情</a>
+<div id="content"></div>
+</body>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('a#emoji').cokEmoji({
+            appendto: '#content',
+            autoparse: 'image',
+            position: 'right'
+        });
+    });
+</script>
+</html>
