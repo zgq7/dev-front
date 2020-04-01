@@ -257,11 +257,11 @@
 
 <script>
     //线上
-/*    let baseUrl = 'http://49.235.64.160';
-    let socketUrl = baseUrl + ':9191';*/
+        let baseUrl = 'http://49.235.64.160';
+        let socketUrl = baseUrl + ':9191';
     //本地
-        let baseUrl = 'http://127.0.0.1';
-        let socketUrl = baseUrl + ':9066';
+/*    let baseUrl = 'http://127.0.0.1';
+    let socketUrl = baseUrl + ':9066';*/
 
     let socket = io(socketUrl, {
         'path': "",
@@ -304,7 +304,7 @@
         console.log(data);
         alert(data === 'true' ? self.uuid + '注册成功！' : self.uuid + '注册失败！');
         if (data === 'true') {
-            init();
+            loading();
         }
     });
     //消息发送结果
@@ -348,11 +348,12 @@
         } else {
             self.uuid = JSON.parse(data).uuid;
             self.name = JSON.parse(data).uuid;
+            loading();
         }
-        init();
     });
 
-    function init() {
+    // 登录之后需要初始化的脚本
+    function loading() {
         // 获取全部在线人
         $.getJSON(httpUrl + "/all", function (data) {
             $.each(data, function (i, item) {
@@ -378,8 +379,6 @@
                 }
             });
         });
-        //计算窗口变化
-        msgWindow();
     }
 
     // 计算聊天窗口变化
@@ -391,6 +390,14 @@
         let commuteHeight = $('.commute').height();
         $('.side').css('height', commuteHeight + 'px');
     }
+
+    //进入首页 必须要做的初始化操作
+    function init() {
+        //计算窗口变化
+        msgWindow();
+    }
+
+    init();
 
     // 登录事件
     $('#submit').click(function () {
