@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.bootcss.com/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+</head>
+<body>
+
+</body>
+
+<script>
+    //const iframe = document.querySelector('#test-iframe');
+
+    function getUnionLoginParams() {
+        const nonce = 'fb4706';
+        const opfid = '572115641423875';//开发者中心获取
+        const uid = '18576626619';
+        const secret = '92cba47a143a0c22ee7';//开发者中心获取
+        const timestamp = Date.now().toString();
+        const params = {opfid, secret, uid, nonce, timestamp};
+        const query = Object.keys(params)
+            .sort(
+                (key1, key2) => key1.charCodeAt(0) - key2.charCodeAt(0)
+            )
+            .reduce((str, key) => (str += `${key}=${params[key]}&`), '')
+            .slice(0, -1);
+        const signature = CryptoJS.SHA1(query).toString(CryptoJS.enc.Hex);
+        return {nonce, opfid, uid, timestamp, signature};
+    }
+
+    const params = getUnionLoginParams();
+    let loginUrl = 'https://open.rabbitpre.com/union-login.html';
+    loginUrl += `?nonce=${params.nonce}`;
+    loginUrl += `&opfid=${params.opfid}`;
+    loginUrl += `&uid=${params.uid}`;
+    loginUrl += `&timestamp=${params.timestamp}`;
+    loginUrl += `&signature=${params.signature}`;
+    loginUrl += `&redirecturl=${encodeURIComponent('https://www.rabbitpre.com/template/multipage.html')}`;
+
+    console.log(params.signature);
+    console.log(loginUrl);
+    //iframe.setAttribute('src', loginUrl);
+</script>
+</html>
